@@ -1,49 +1,48 @@
-# Luma Learning Lab Deployment
+# Luma Learning Lab
 
-This is the standalone deployment repository for Luma Learning Lab. It contains the public application shell, schemas, Cloudflare Pages Functions, and D1 migration only.
+> 面向英语视频学习的个人工作台：先理解，再回忆，再通过 GPT Live 或 AI 助手进行巩固。
 
-## Private library boundary
+[在线体验](https://1mpanda303-code.github.io/Pino.github.io/)
 
-The 100-video personal library, links, and bilingual transcripts are intentionally excluded from this repository and from the deployed static files. A new visitor sees an empty library until they restore their own workspace from Cloudflare D1 or add their own videos.
+## 你可以做什么
 
-The local personal-library seed is generated outside this repository at:
+- 建立自己的视频片库，围绕字幕、关键词和重点片段完成三遍学习。
+- 导出学习材料给 GPT Live 进行追问、复述和迁移练习，再将结构化报告导回工作台。
+- 使用 AI 助手补充学习记录，并在进步区查看、编辑或删除 AI 与 Live 报告。
+- 汇总词汇、问题、表达和学习记录，持续追踪个人进步。
+- 在“设置与数据管理”中备份、恢复和同步自己的工作区。
 
-```text
-D:\AI\Codex\workspace\project5\private-library\luma-personal-library-workspace.json
+## 隐私与数据
+
+本仓库不包含任何个人视频、字幕、学习报告、对话记录、API Key、同步密码或账号信息。公开访问者会从空片库开始；个人资料仅保存在自己的浏览器、备份文件或自行配置的云同步空间中。
+
+请勿将 `.env`、`.dev.vars`、私有资料或任何凭据提交到 GitHub。
+
+## 本地运行
+
+需要 Node.js 22 和 pnpm 11。
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-It is ignored by Git. Do not add it, `public/data/catalog.json`, `public/data/episodes/`, `src/data/episodes.json`, `.env`, API keys, sync passwords, or account tokens to a commit.
+随后打开 `http://127.0.0.1:5175`。
 
-## First personal-library migration
+## 验证
 
-1. Run `node scripts/generate-private-library-workspace.mjs` from `D:\AI\Codex\workspace\project5` if the local seed needs to be regenerated.
-2. In the workbench, use the upper-right restore button to select `private-library/luma-personal-library-workspace.json`.
-3. The package merges the 100 videos into the current browser workspace without replacing existing reports, highlights, or study records.
-4. Open upper-right cloud sync, connect with the personal sync password, then upload the merged workspace to D1.
-5. On another device, open cloud sync and download the D1 snapshot. The personal library will appear after the restore completes.
-
-## Cloudflare D1 sync
-
-Cloudflare Pages is required for `/api/sync`; GitHub Pages can host only the empty static shell.
-
-1. Create a D1 database, then apply `migrations/0001_workspace_snapshots.sql`.
-2. Bind the database to the Pages project as `DB`.
-3. Create a production secret named `SYNC_SECRET`. Keep its value in Cloudflare only.
-4. Deploy the repository and use the same value as the personal sync password in the app.
-
-The snapshot endpoint rejects stale revisions and responses are `Cache-Control: no-store`. The current 100-video seed is about 920 KB UTF-8, below the endpoint's 2 MB payload limit. If the personal workspace grows close to that limit, export a backup and split or archive content before uploading.
-
-## Local verification
-
-```powershell
-pnpm install --frozen-lockfile
+```bash
 pnpm test
 pnpm build
-pnpm preview
 ```
 
-Open `http://127.0.0.1:4175`. Verify that an empty browser profile has no video titles or transcripts before restoring a personal D1 snapshot.
+## 目录说明
 
-## Publishing
+- `src/`：React 工作台与学习数据逻辑。
+- `public/schemas/`：AI、GPT Live 与学习回填包的 JSON Schema。
+- `functions/`：Cloudflare Pages Functions，包括 AI 转发和工作区同步接口。
+- `migrations/`：Cloudflare D1 的数据库迁移。
 
-Follow `D:\AI\Codex\workspace\project5\docs\03_AI更新与GitHub上传交接SOP.md` and the newest handoff in `docs/update-handoffs/`. Stage only the files listed by that handoff. Never use `git add .` for this repository.
+## 部署说明
+
+GitHub Pages 提供公开的静态工作台。若要使用服务端 AI 转发或跨设备同步，请在自己的 Cloudflare Pages 项目中部署本仓库，并将 D1 数据库和密钥仅配置在 Cloudflare 环境变量中。
