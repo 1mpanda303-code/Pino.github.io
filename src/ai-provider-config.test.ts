@@ -48,6 +48,20 @@ describe('DeepSeek output budget', () => {
 });
 
 describe('browser provider configuration', () => {
+  it('explains that either the session key or the production secret is missing', async () => {
+    const request = new Request('http://local/api/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'chat', language: 'zh', question: '你好', history: [] }),
+    });
+
+    const response = await onRequest({ request, env: {} });
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      code: 'not_configured',
+      message: '未检测到可用 API Key。请在当前会话重新输入 API Key，或在 Cloudflare Pages Production Secrets 配置 DEEPSEEK_API_KEY 后重新部署。',
+    });
+  });
+
   it('uses the session provider key when no server-side key is configured', async () => {
     vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
       expect(url).toBe('https://api.deepseek.com/chat/completions');

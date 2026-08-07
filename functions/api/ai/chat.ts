@@ -168,7 +168,7 @@ export async function onRequest({ request, env }: PagesContext) {
     return json({ requestId: id, ...result });
   } catch (error) {
     const code = error instanceof Error ? error.message : 'upstream_unavailable';
-    if (code === 'not_configured') return json({ code, message: 'DeepSeek 尚未在服务端配置。', requestId: id }, 503);
+    if (code === 'not_configured') return json({ code, message: '未检测到可用 API Key。请在当前会话重新输入 API Key，或在 Cloudflare Pages Production Secrets 配置 DEEPSEEK_API_KEY 后重新部署。', requestId: id }, 503);
     if (code === 'upstream_rate_limited') return json({ code, message: 'DeepSeek 当前请求较多，请稍后再试。', requestId: id, retryAfter: 20 }, 429, { 'Retry-After': '20' });
     if (code === 'upstream_error') return json({ code, message: 'DeepSeek 暂时无法完成请求。', requestId: id }, 502);
     return json({ code: 'upstream_unavailable', message: 'AI 服务暂时不可用，请稍后重试。', requestId: id }, 503);
