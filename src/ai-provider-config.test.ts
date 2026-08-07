@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AI_MAX_OUTPUT_TOKENS } from '../functions/api/ai/chat';
+import { AI_MAX_OUTPUT_TOKENS, onRequest } from '../functions/api/ai/chat';
 import { callDeepSeek } from '../functions/lib/aiProviders';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -44,5 +44,39 @@ describe('DeepSeek output budget', () => {
     expect(requestBody).toMatchObject({ model: 'test-model', max_tokens: 2048 });
     expect(requestBody).not.toHaveProperty('response_format');
     expect(result).toMatchObject({ providerId: 'p1', model: 'test-model', finishReason: 'stop' });
+  });
+});
+
+describe('browser provider configuration', () => {
+  it('uses the session provider key when no server-side key is configured', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
+      expect(url).toBe('https://api.deepseek.com/chat/completions');
+      expect(init?.headers).toMatchObject({ Authorization: 'Bearer session-key' });
+      return new Response(JSON.stringify({ choices: [{ finish_reason: 'stop', message: { content: 'ok' } }] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }));
+
+    const request = new Request('http://local/api/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'chat',
+        language: 'zh',
+        question: 'Explain this sentence.',
+        history: [],
+        provider: {
+          providerId: 'deepseek-browser',
+          protocol: 'openai-compatible-chat',
+          baseUrl: 'https://api.deepseek.com',
+          model: 'deepseek-v4-flash',
+          apiKey: 'session-key',
+        },
+      }),
+    });
+
+    const response = await onRequest({ request, env: {} });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ providerId: 'deepseek-browser', model: 'deepseek-v4-flash', text: 'ok' });
   });
 });

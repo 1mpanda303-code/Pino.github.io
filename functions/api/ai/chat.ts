@@ -157,7 +157,6 @@ export async function onRequest({ request, env }: PagesContext) {
   if (!question || !history) return json({ code: 'invalid_request', message: '请先输入有效问题。', requestId: id }, 400);
   if (action === 'generate_ai_report' && body.learningFile === undefined) return json({ code: 'invalid_request', message: '生成 AI 报告前需要当前学习资料。', requestId: id }, 400);
   if (byteSize(body.learningFile) > AI_MAX_LEARNING_FILE_BYTES) return json({ code: 'context_too_large', message: '当前学习文件超过代理的安全传输上限。记录仍会保留，请缩短单次附件后重试。', requestId: id }, 413);
-  if (!env.DEEPSEEK_API_KEY?.trim()) return json({ code: 'not_configured', message: 'DeepSeek 尚未在服务端配置。', requestId: id }, 503);
 
   const system = `${systemInstruction(action, language, body.learningFile !== undefined)}${learningMaterial(body.learningFile)}`;
   const provider = validProvider(body.provider);
