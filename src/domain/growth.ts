@@ -32,7 +32,33 @@ export type VocabularyAccumulation = {
   sourceReportFingerprint: string;
   term: string;
   meaning: string;
+  example: string;
   reason: string;
+  latestDate: string;
+  episodeIds: string[];
+  count: number;
+};
+
+export type GrammarAccumulation = {
+  sourceReportFingerprint: string;
+  pattern: string;
+  explanation: string;
+  example: string;
+  reason: string;
+  latestDate: string;
+  episodeIds: string[];
+  count: number;
+};
+
+export type CollectionEntry = {
+  id: string;
+  source: 'user_question' | 'ai_recommendation';
+  kind: QuestionKind;
+  sourceReportFingerprint: string;
+  label: string;
+  prompt: string;
+  explanation: string;
+  example: string;
   latestDate: string;
   episodeIds: string[];
   count: number;
@@ -64,6 +90,7 @@ export type GrowthModel = {
   difficulties: Array<{ id: SubtitleDifficulty; count: number }>;
   accumulations: LearningAccumulation[];
   vocabulary: VocabularyAccumulation[];
+  collectionEntries: CollectionEntry[];
   archive: GrowthArchiveEntry[];
 };
 
@@ -304,14 +331,18 @@ function buildVocabularyAccumulations(aiReports: StoredAiAssistantReport[]) {
       const key = normalizeKey(item.term);
       const existing = map.get(key);
       if (!existing) {
-      map.set(key, { sourceReportFingerprint: stored.fingerprint, term: item.term, meaning: item.meaning, reason: item.reason, latestDate: date, episodeIds: [stored.episodeId], count: 1 });
+        map.set(key, { sourceReportFingerprint: stored.fingerprint, term: item.term, meaning: item.meaning, example: item.example ?? '', reason: item.reason, latestDate: date, episodeIds: [stored.episodeId], count: 1 });
       } else {
-        existing.count += 1;
-        if (!existing.episodeIds.includes(stored.episodeId)) existing.episodeIds.push(stored.episodeId);
-      if (date >= existing.latestDate) {
-        existing.sourceReportFingerprint = stored.fingerprint;
-        existing.term = item.term;
+        const isNewEpisode = !existing.episodeIds.includes(stored.episodeId);
+        if (isNewEpisode) {
+          existing.count += 1;
+          existing.episodeIds.push(stored.episodeId);
+        }
+        if (date >= existing.latestDate) {
+          existing.sourceReportFingerprint = stored.fingerprint;
+          existing.term = item.term;
           existing.meaning = item.meaning;
+          existing.example = item.example ?? '';
           existing.reason = item.reason;
           existing.latestDate = date;
         }
@@ -319,6 +350,78 @@ function buildVocabularyAccumulations(aiReports: StoredAiAssistantReport[]) {
     }
   }
   return [...map.values()].sort((a, b) => b.latestDate.localeCompare(a.latestDate) || b.count - a.count);
+}
+
+function buildGrammarAccumulations(aiReports: StoredAiAssistantReport[]) {
+  const map = new Map<string, GrammarAccumulation>();
+  for (const stored of [...aiReports].sort(reportOrder)) {
+    const date = stored.report.generatedAt.slice(0, 10);
+    for (const item of stored.report.recommendations.grammar) {
+      const key = normalizeKey(item.pattern);
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, { sourceReportFingerprint: stored.fingerprint, pattern: item.pattern, explanation: item.explanation, example: item.example ?? '', reason: item.reason, latestDate: date, episodeIds: [stored.episodeId], count: 1 });
+      } else {
+        const isNewEpisode = !existing.episodeIds.includes(stored.episodeId);
+        if (isNewEpisode) {
+          existing.count += 1;
+          existing.episodeIds.push(stored.episodeId);
+        }
+        if (date >= existing.latestDate) {
+          existing.sourceReportFingerprint = stored.fingerprint;
+          existing.pattern = item.pattern;
+          existing.explanation = item.explanation;
+          existing.example = item.example ?? '';
+          existing.reason = item.reason;
+          existing.latestDate = date;
+        }
+      }
+    }
+  }
+  return [...map.values()].sort((a, b) => b.latestDate.localeCompare(a.latestDate) || b.count - a.count);
+}
+
+function buildCollectionEntries(aiReports: StoredAiAssistantReport[]) {
+  const questions: CollectionEntry[] = buildAccumulations(aiReports).map((item) => ({
+    id: `question:${item.questionKey}`,
+    source: 'user_question',
+    kind: item.kind,
+    sourceReportFingerprint: item.sourceReportFingerprint,
+    label: item.label,
+    prompt: item.latestQuestion,
+    explanation: item.answerSummary,
+    example: '',
+    latestDate: item.latestDate,
+    episodeIds: item.episodeIds,
+    count: item.count,
+  }));
+  const vocabulary: CollectionEntry[] = buildVocabularyAccumulations(aiReports).map((item) => ({
+    id: `vocabulary:${normalizeKey(item.term)}`,
+    source: 'ai_recommendation',
+    kind: 'vocabulary',
+    sourceReportFingerprint: item.sourceReportFingerprint,
+    label: item.term,
+    prompt: item.reason,
+    explanation: item.meaning,
+    example: item.example,
+    latestDate: item.latestDate,
+    episodeIds: item.episodeIds,
+    count: item.count,
+  }));
+  const grammar: CollectionEntry[] = buildGrammarAccumulations(aiReports).map((item) => ({
+    id: `grammar:${normalizeKey(item.pattern)}`,
+    source: 'ai_recommendation',
+    kind: 'grammar',
+    sourceReportFingerprint: item.sourceReportFingerprint,
+    label: item.pattern,
+    prompt: item.reason,
+    explanation: item.explanation,
+    example: item.example,
+    latestDate: item.latestDate,
+    episodeIds: item.episodeIds,
+    count: item.count,
+  }));
+  return [...questions, ...vocabulary, ...grammar].sort((a, b) => b.latestDate.localeCompare(a.latestDate) || b.count - a.count || a.label.localeCompare(b.label));
 }
 
 export function buildGrowthModel(input: {
@@ -382,6 +485,7 @@ export function buildGrowthModel(input: {
     difficulties: countBy(consolidatedAi.map((item) => item.report.materialAnalysis.subtitleDifficulty)),
     accumulations: buildAccumulations(selectedAi),
     vocabulary: buildVocabularyAccumulations(selectedAi),
+    collectionEntries: buildCollectionEntries(selectedAi),
     archive,
   };
 }

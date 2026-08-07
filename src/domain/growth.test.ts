@@ -55,6 +55,7 @@ describe('growth evidence model', () => {
     ai.materialAnalysis.informationDensity = 'high';
     ai.userQuestions = [{ questionKey: 'constraint-usage', label: 'constraint', kind: 'vocabulary', depth: 'usage', question: 'How do I use constraint?', answerSummary: 'A limiting condition.', sourceQuote: '' }];
     ai.recommendations.vocabulary = [{ term: 'champion', meaning: 'winner', reason: 'Key material word.' }];
+    ai.recommendations.grammar = [{ pattern: 'if + clause', explanation: 'Use a condition to introduce a possible result.', reason: 'Useful for explaining the puzzle rules.' }];
     const live = createReportTemplate('2026-08-07-teded-p934-01', episode, new Date('2026-08-07T12:00:00.000Z'));
     live.gist.status = 'independent';
     live.details = [{ findingKey: 'condition', label: 'condition', evidence: 'Explained correctly.', status: 'after_question' }];
@@ -73,6 +74,11 @@ describe('growth evidence model', () => {
     expect(model.archive[0].aiReport?.episodeId).toBe(episode.id);
     expect(model.vocabulary.map((item) => item.term)).toEqual(['champion']);
     expect(model.vocabulary[0]).toMatchObject({ meaning: 'winner', count: 1, episodeIds: [episode.id] });
+    expect(model.collectionEntries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ source: 'user_question', kind: 'vocabulary', label: 'constraint' }),
+      expect.objectContaining({ source: 'ai_recommendation', kind: 'vocabulary', label: 'champion' }),
+      expect.objectContaining({ source: 'ai_recommendation', kind: 'grammar', label: 'if + clause' }),
+    ]));
     expect(model.accumulations[0].sourceReportFingerprint).toBe(storedAi.fingerprint);
     expect(model.vocabulary[0].sourceReportFingerprint).toBe(storedAi.fingerprint);
   });
@@ -107,6 +113,36 @@ describe('growth evidence model', () => {
     expect(model.archive[0].aiReports).toHaveLength(2);
     expect(model.archive[0].aiReport?.report.materialAnalysis).toMatchObject({ primaryTopic: 'mathematics_logic', contentForm: 'puzzle', subtitleDifficulty: 'B1', informationDensity: 'low' });
     expect(model.archive[0].aiReport?.report.userQuestions).toHaveLength(2);
+  });
+
+  it('counts a repeated AI recommendation once per related video', () => {
+    const secondEpisode = { ...episode, id: 'teded-p933', title: 'Power plant' };
+    const first = createAiReportTemplate(episode, new Date('2026-08-06T02:00:00.000Z'));
+    first.recommendations = {
+      vocabulary: [{ term: 'outcome', meaning: 'result', reason: 'Subtitle term.' }],
+      grammar: [{ pattern: 'if + clause', explanation: 'A condition.', reason: 'Subtitle structure.' }],
+    };
+    const revision = createAiReportTemplate(episode, new Date('2026-08-07T02:00:00.000Z'));
+    revision.recommendations = {
+      vocabulary: [{ term: 'outcome', meaning: 'result', reason: 'A refined note from the same video.' }],
+      grammar: [{ pattern: 'if + clause', explanation: 'A refined condition note.', reason: 'The same structure from the same video.' }],
+    };
+    const related = createAiReportTemplate(secondEpisode, new Date('2026-08-08T02:00:00.000Z'));
+    related.recommendations = {
+      vocabulary: [{ term: 'outcome', meaning: 'result', reason: 'The term also appears in another video.' }],
+      grammar: [{ pattern: 'if + clause', explanation: 'A condition in another video.', reason: 'The structure also appears in another video.' }],
+    };
+    const model = buildGrowthModel({
+      episodes: [episode, secondEpisode], studyAttempts: {}, completions: {},
+      aiReports: [
+        createStoredAiReport(first, undefined, '2026-08-06T03:00:00.000Z'),
+        createStoredAiReport(revision, undefined, '2026-08-07T03:00:00.000Z'),
+        createStoredAiReport(related, undefined, '2026-08-08T03:00:00.000Z'),
+      ],
+      liveReports: [], range: 'all', now: new Date('2026-08-08T12:00:00.000Z'),
+    });
+    expect(model.vocabulary.find((item) => item.term === 'outcome')).toMatchObject({ count: 2, episodeIds: [episode.id, secondEpisode.id] });
+    expect(model.collectionEntries.find((item) => item.id === 'grammar:if + clause')).toMatchObject({ count: 2, episodeIds: [episode.id, secondEpisode.id] });
   });
 
   it('uses the current library title in the archive after a title override', () => {

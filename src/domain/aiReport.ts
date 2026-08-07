@@ -76,8 +76,8 @@ export type AiAssistantReport = {
     sourceQuote: string;
   }>;
   recommendations: {
-    vocabulary: Array<{ term: string; meaning: string; reason: string }>;
-    grammar: Array<{ pattern: string; explanation: string; reason: string }>;
+    vocabulary: Array<{ term: string; meaning: string; example?: string; reason: string }>;
+    grammar: Array<{ pattern: string; explanation: string; example?: string; reason: string }>;
   };
   limitations: string[];
 };
@@ -167,20 +167,24 @@ export function validateAiAssistantReport(value: unknown): AiReportValidation {
   const vocabulary = Array.isArray(recommendationsObject.vocabulary) ? recommendationsObject.vocabulary.map((item, index) => {
     const path = `$.recommendations.vocabulary[${index}]`;
     const entry = objectAt(item, path, errors) ?? {};
-    exactKeys(entry, ['term', 'meaning', 'reason'], path, errors);
+    exactKeys(entry, ['term', 'meaning', 'example', 'reason'], path, errors);
     return {
       term: requiredString(entry.term, `${path}.term`, errors, 100),
       meaning: requiredString(entry.meaning, `${path}.meaning`, errors, 500),
+      // Examples were added after v1 first shipped. Keep earlier valid reports readable.
+      example: entry.example === undefined ? '' : optionalString(entry.example, `${path}.example`, errors, 500),
       reason: requiredString(entry.reason, `${path}.reason`, errors, 500),
     };
   }) : (errors.push('$.recommendations.vocabulary 必须是数组。'), []);
   const grammar = Array.isArray(recommendationsObject.grammar) ? recommendationsObject.grammar.map((item, index) => {
     const path = `$.recommendations.grammar[${index}]`;
     const entry = objectAt(item, path, errors) ?? {};
-    exactKeys(entry, ['pattern', 'explanation', 'reason'], path, errors);
+    exactKeys(entry, ['pattern', 'explanation', 'example', 'reason'], path, errors);
     return {
       pattern: requiredString(entry.pattern, `${path}.pattern`, errors, 200),
       explanation: requiredString(entry.explanation, `${path}.explanation`, errors, 700),
+      // Examples were added after v1 first shipped. Keep earlier valid reports readable.
+      example: entry.example === undefined ? '' : optionalString(entry.example, `${path}.example`, errors, 500),
       reason: requiredString(entry.reason, `${path}.reason`, errors, 500),
     };
   }) : (errors.push('$.recommendations.grammar 必须是数组。'), []);
