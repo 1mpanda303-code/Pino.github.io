@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luma.local/schemas/luma-live-report-v2.schema.json",
+  "title": "Luma GPT Live Report v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportType", "sessionId", "episodeId", "episodeTitle", "sessionDate", "durationMinutes", "durationSource", "summary", "gist", "details", "promptUsage", "keywordOutcomes", "retelling", "transfer", "strengths", "gaps", "nextFocus", "assessmentBasis", "assessmentConfidence", "limitations"],
+  "properties": {
+    "schemaVersion": { "const": "luma-live-report/v2" },
+    "reportType": { "const": "gpt_live" },
+    "sessionId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$" },
+    "episodeId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "episodeTitle": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "sessionDate": { "type": "string", "format": "date" },
+    "durationMinutes": { "anyOf": [{ "type": "integer", "minimum": 1, "maximum": 600 }, { "type": "null" }] },
+    "durationSource": { "enum": ["user_confirmed", "unknown"] },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 800 },
+    "gist": { "$ref": "#/$defs/gist" },
+    "details": { "type": "array", "items": { "$ref": "#/$defs/detail" } },
+    "promptUsage": { "type": "array", "items": { "$ref": "#/$defs/promptUsage" } },
+    "keywordOutcomes": { "type": "array", "items": { "$ref": "#/$defs/keyword" } },
+    "retelling": { "$ref": "#/$defs/retelling" },
+    "transfer": { "$ref": "#/$defs/transfer" },
+    "strengths": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "gaps": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "nextFocus": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "assessmentBasis": { "enum": ["recall", "questions", "retelling", "transfer", "mixed"] },
+    "assessmentConfidence": { "enum": ["low", "medium", "high"] },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 500 } }
+  },
+  "$defs": {
+    "status": { "enum": ["independent", "after_question", "after_english_hint", "after_chinese_support", "not_demonstrated", "not_assessed"] },
+    "finding": { "type": "object", "additionalProperties": false, "required": ["findingKey", "label", "evidence"], "properties": { "findingKey": { "type": "string", "minLength": 1, "maxLength": 120 }, "label": { "type": "string", "minLength": 1, "maxLength": 300 }, "evidence": { "type": "string", "maxLength": 500 } } },
+    "detail": { "type": "object", "additionalProperties": false, "required": ["findingKey", "label", "evidence", "status"], "properties": { "findingKey": { "type": "string", "minLength": 1, "maxLength": 120 }, "label": { "type": "string", "minLength": 1, "maxLength": 300 }, "evidence": { "type": "string", "maxLength": 500 }, "status": { "$ref": "#/$defs/status" } } },
+    "gist": { "type": "object", "additionalProperties": false, "required": ["status", "evidence", "missingConcepts"], "properties": { "status": { "$ref": "#/$defs/status" }, "evidence": { "type": "string", "maxLength": 500 }, "missingConcepts": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 500 } } } },
+    "promptUsage": { "type": "object", "additionalProperties": false, "required": ["type", "target", "outcome"], "properties": { "type": { "enum": ["question", "english_hint", "chinese_support", "answer_reveal"] }, "target": { "type": "string", "minLength": 1, "maxLength": 300 }, "outcome": { "type": "string", "minLength": 1, "maxLength": 500 } } },
+    "keyword": { "type": "object", "additionalProperties": false, "required": ["term", "status", "evidence"], "properties": { "term": { "type": "string", "minLength": 1, "maxLength": 100 }, "status": { "$ref": "#/$defs/status" }, "evidence": { "type": "string", "maxLength": 500 } } },
+    "retelling": { "type": "object", "additionalProperties": false, "required": ["factAccuracy", "structure", "languageFindings"], "properties": { "factAccuracy": { "enum": ["accurate", "mostly_accurate", "partly_accurate", "inaccurate", "not_assessed"] }, "structure": { "enum": ["clear", "partial", "unclear", "not_assessed"] }, "languageFindings": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 500 } } } },
+    "transfer": { "type": "object", "additionalProperties": false, "required": ["status", "evidence"], "properties": { "status": { "$ref": "#/$defs/status" }, "evidence": { "type": "string", "maxLength": 500 } } }
+  }
+}

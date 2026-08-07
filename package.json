@@ -1,0 +1,31 @@
+{
+  "name": "luma-learning-workbench",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.9.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5175 --strictPort",
+    "dev:lan": "vite --host 0.0.0.0 --port 5175 --strictPort",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4175 --strictPort",
+    "test": "vitest run",
+    "visual:sync": "node scripts/check-sync-ui.mjs",
+    "extract": "python scripts/extract_teded.py --limit 12 --output src/data/episodes.json",
+    "visual-check": "node scripts/visual-check.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "playwright": "^1.62.1",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "^4.1.10"
+  }
+}

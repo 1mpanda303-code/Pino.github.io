@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "luma-live-report/v2",
+  "reportType": "gpt_live",
+  "sessionId": "2026-08-07-teded-p934-01",
+  "episodeId": "teded-p934",
+  "episodeTitle": "Can you solve the monster duel riddle - Alex Gendler",
+  "sessionDate": "2026-08-07",
+  "durationMinutes": 24,
+  "durationSource": "user_confirmed",
+  "summary": "能够独立说明主旨，但遗漏了最后一个因果条件。",
+  "gist": { "status": "independent", "evidence": "The story tests how the champion reasons under uncertainty.", "missingConcepts": [] },
+  "details": [{ "findingKey": "final-condition", "label": "最后一个获胜条件", "evidence": "复述时未提及该条件。", "status": "after_english_hint" }],
+  "promptUsage": [{ "type": "english_hint", "target": "final-condition", "outcome": "提示后能够解释。" }],
+  "keywordOutcomes": [{ "term": "champion", "status": "independent", "evidence": "能在新句子中正确使用。" }],
+  "retelling": { "factAccuracy": "mostly_accurate", "structure": "partial", "languageFindings": ["结尾缺少因果连接词。"] },
+  "transfer": { "status": "after_question", "evidence": "追问后能迁移到新的决策情境。" },
+  "strengths": [{ "findingKey": "gist-structure", "label": "能抓住谜题的核心决策结构", "evidence": "无提示概括完整。" }],
+  "gaps": [{ "findingKey": "causal-ending", "label": "复述结尾容易遗漏因果条件", "evidence": "本次需要英文提示。" }],
+  "nextFocus": "不看字幕完成 45 秒“条件 → 决策 → 结果”复述。",
+  "assessmentBasis": "mixed",
+  "assessmentConfidence": "medium",
+  "limitations": []
+}

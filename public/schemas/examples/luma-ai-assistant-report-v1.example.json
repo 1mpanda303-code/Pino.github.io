@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "luma-ai-assistant-report/v1",
+  "reportType": "ai_assistant",
+  "episodeId": "teded-p934",
+  "episodeTitle": "Can you solve the monster duel riddle - Alex Gendler",
+  "generatedAt": "2026-08-07T04:00:00.000Z",
+  "materialAnalysis": {
+    "primaryTopic": "mathematics_logic",
+    "contentForm": "puzzle",
+    "subtitleDifficulty": "B2",
+    "informationDensity": "high",
+    "summary": "一则需要追踪条件、角色选择与结果的逻辑谜题。此摘要只描述材料，不评价学习者是否理解。"
+  },
+  "userQuestions": [
+    {
+      "questionKey": "distinguish-vs-differentiate",
+      "label": "distinguish 与 differentiate",
+      "kind": "vocabulary",
+      "depth": "comparison",
+      "question": "这里为什么用 distinguish，它和 differentiate 有什么区别？",
+      "answerSummary": "distinguish 更强调识别差异或辨认对象，differentiate 更常强调说明或形成差别。",
+      "sourceQuote": "distinguish one monster from another"
+    }
+  ],
+  "recommendations": {
+    "vocabulary": [
+      { "term": "constraint", "meaning": "限制条件", "reason": "它概括了谜题中影响选择的条件。" }
+    ],
+    "grammar": [
+      { "pattern": "would have + past participle", "explanation": "用于描述与过去事实相反的结果。", "reason": "适合复述角色没有选择的路径。" }
+    ]
+  },
+  "limitations": ["字幕难度是基于当前英文字幕文本的近似判断。"]
+}

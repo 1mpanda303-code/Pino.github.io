@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luma.local/schemas/luma-ai-assistant-report-v1.schema.json",
+  "title": "Luma AI Assistant Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "reportType", "episodeId", "episodeTitle", "generatedAt", "materialAnalysis", "userQuestions", "recommendations", "limitations"],
+  "properties": {
+    "schemaVersion": { "const": "luma-ai-assistant-report/v1" },
+    "reportType": { "const": "ai_assistant" },
+    "episodeId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "episodeTitle": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "generatedAt": { "type": "string", "format": "date-time", "maxLength": 40 },
+    "materialAnalysis": { "$ref": "#/$defs/materialAnalysis" },
+    "userQuestions": { "type": "array", "items": { "$ref": "#/$defs/userQuestion" } },
+    "recommendations": { "$ref": "#/$defs/recommendations" },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 500 } }
+  },
+  "$defs": {
+    "materialAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primaryTopic", "contentForm", "subtitleDifficulty", "informationDensity", "summary"],
+      "properties": {
+        "primaryTopic": { "enum": ["science_technology", "history_culture", "society_economy", "psychology_health", "mathematics_logic", "arts_literature", "environment_nature", "other"] },
+        "contentForm": { "enum": ["explainer", "story", "puzzle", "opinion", "biography", "other"] },
+        "subtitleDifficulty": { "enum": ["A1", "A2", "B1", "B2", "C1", "C2", "unknown"] },
+        "informationDensity": { "enum": ["low", "medium", "high", "unknown"] },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 800 }
+      }
+    },
+    "userQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["questionKey", "label", "kind", "depth", "question", "answerSummary", "sourceQuote"],
+      "properties": {
+        "questionKey": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "label": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "kind": { "enum": ["vocabulary", "grammar", "expression", "comprehension", "translation", "other"] },
+        "depth": { "enum": ["lookup", "usage", "analysis", "comparison", "transfer"] },
+        "question": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "answerSummary": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "sourceQuote": { "type": "string", "maxLength": 500 }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vocabulary", "grammar"],
+      "properties": {
+        "vocabulary": { "type": "array", "items": { "$ref": "#/$defs/vocabularyRecommendation" } },
+        "grammar": { "type": "array", "items": { "$ref": "#/$defs/grammarRecommendation" } }
+      }
+    },
+    "vocabularyRecommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["term", "meaning", "reason"],
+      "properties": {
+        "term": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "meaning": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "grammarRecommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pattern", "explanation", "reason"],
+      "properties": {
+        "pattern": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "explanation": { "type": "string", "minLength": 1, "maxLength": 700 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    }
+  }
+}

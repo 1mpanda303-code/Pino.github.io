@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://luma.local/schemas/luma-learning-return-package-v1.schema.json",
+  "title": "Luma Learning Return Package v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "packageType", "video", "transcript", "keywords", "highlights", "questionLedger", "classification", "attempt", "aiReports", "liveReports", "meta"],
+  "properties": {
+    "schemaVersion": { "const": "luma-learning-return-package/v1" },
+    "packageType": { "const": "learning-return" },
+    "video": { "$ref": "#/$defs/video" },
+    "transcript": { "$ref": "#/$defs/transcript" },
+    "keywords": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 300 } },
+    "highlights": { "type": "array", "items": { "$ref": "#/$defs/highlight" } },
+    "questionLedger": { "type": "array", "items": { "$ref": "#/$defs/ledgerEntry" } },
+    "classification": { "$ref": "#/$defs/classification" },
+    "attempt": { "$ref": "#/$defs/attempt" },
+    "aiReports": { "type": "array", "items": { "type": "object" } },
+    "liveReports": { "type": "array", "items": { "type": "object" } },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "generatedBy": { "type": "string", "maxLength": 200 },
+        "returnedAt": { "type": "string", "maxLength": 40 },
+        "notes": { "type": "string", "maxLength": 2000 }
+      }
+    }
+  },
+  "$defs": {
+    "videoSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "id"],
+      "properties": {
+        "platform": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "id": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "url": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "maxLength": 80 }
+      }
+    },
+    "video": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["episodeId", "title", "publishedDate", "durationSeconds", "sources"],
+      "properties": {
+        "episodeId": { "anyOf": [{ "type": "string", "maxLength": 128 }, { "type": "null" }] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "publishedDate": { "type": "string", "maxLength": 20 },
+        "durationSeconds": { "anyOf": [{ "type": "integer", "minimum": 0, "maximum": 86400 }, { "type": "null" }] },
+        "sources": { "type": "array", "items": { "$ref": "#/$defs/videoSource" } }
+      }
+    },
+    "transcript": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["english", "chinese", "source"],
+      "properties": {
+        "english": { "type": "string", "maxLength": 100000 },
+        "chinese": { "type": "string", "maxLength": 100000 },
+        "source": { "enum": ["ai-collected", "user-provided", "workbench", "not-provided"] }
+      }
+    },
+    "highlight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language", "type", "quote", "note"],
+      "properties": {
+        "language": { "enum": ["en", "zh"] },
+        "type": { "enum": ["key", "question", "mastered"] },
+        "quote": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "note": { "type": "string", "maxLength": 2000 }
+      }
+    },
+    "ledgerEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["questionKey", "label", "kind", "depth", "question", "answerSummary", "sourceQuote", "stage", "status"],
+      "properties": {
+        "questionKey": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "label": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "kind": { "enum": ["vocabulary", "grammar", "expression", "comprehension", "translation", "other"] },
+        "depth": { "enum": ["lookup", "usage", "analysis", "comparison", "transfer"] },
+        "question": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "answerSummary": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "sourceQuote": { "type": "string", "maxLength": 500 },
+        "stage": { "enum": ["preparation", "audio-only", "visual-no-captions", "transcript-study", "recall", "live", "other"] },
+        "status": { "enum": ["open", "resolved"] }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primaryTopic", "contentForm", "subtitleDifficulty", "informationDensity"],
+      "properties": {
+        "primaryTopic": { "enum": ["science_technology", "history_culture", "society_economy", "psychology_health", "mathematics_logic", "arts_literature", "environment_nature", "other"] },
+        "contentForm": { "enum": ["explainer", "story", "puzzle", "opinion", "biography", "other"] },
+        "subtitleDifficulty": { "enum": ["A1", "A2", "B1", "B2", "C1", "C2", "unknown"] },
+        "informationDensity": { "enum": ["low", "medium", "high", "unknown"] }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["createdAt", "passes", "recall"],
+      "properties": {
+        "createdAt": { "type": "string", "maxLength": 40 },
+        "passes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["audioOnly", "visualNoCaptions", "transcriptStudy"],
+          "properties": {
+            "audioOnly": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completedAt", "comprehension", "captured", "fragments"],
+              "properties": {
+                "completedAt": { "anyOf": [{ "type": "string", "maxLength": 40 }, { "type": "null" }] },
+                "comprehension": { "anyOf": [{ "enum": [1, 2, 3, 4, 5] }, { "type": "null" }] },
+                "captured": { "type": "array", "items": { "enum": ["almost-nothing", "words", "phrases", "topic", "gist", "details"] } },
+                "fragments": { "type": "string", "maxLength": 3000 }
+              }
+            },
+            "visualNoCaptions": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completedAt", "comprehension", "visualHelp", "confirmed", "gistGuess"],
+              "properties": {
+                "completedAt": { "anyOf": [{ "type": "string", "maxLength": 40 }, { "type": "null" }] },
+                "comprehension": { "anyOf": [{ "enum": [1, 2, 3, 4, 5] }, { "type": "null" }] },
+                "visualHelp": { "anyOf": [{ "enum": ["none", "some", "strong"] }, { "type": "null" }] },
+                "confirmed": { "type": "array", "items": { "enum": ["actors", "setting", "topic", "cause", "example", "conclusion"] } },
+                "gistGuess": { "type": "string", "maxLength": 3000 }
+              }
+            },
+            "transcriptStudy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["completedAt", "reviewConfirmed", "transcriptCoverage", "replayedWithoutCaptions", "postReplayComprehension"],
+              "properties": {
+                "completedAt": { "anyOf": [{ "type": "string", "maxLength": 40 }, { "type": "null" }] },
+                "reviewConfirmed": { "type": "boolean" },
+                "transcriptCoverage": { "enum": ["none", "partial", "complete"] },
+                "replayedWithoutCaptions": { "anyOf": [{ "type": "boolean" }, { "type": "null" }] },
+                "postReplayComprehension": { "anyOf": [{ "enum": [1, 2, 3, 4, 5] }, { "type": "null" }] }
+              }
+            }
+          }
+        },
+        "recall": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "oralCompleted", "retelling", "gist", "outline", "checks", "independence", "completedAt"],
+          "properties": {
+            "mode": { "enum": ["oral", "written"] },
+            "oralCompleted": { "type": "boolean" },
+            "retelling": { "type": "string", "maxLength": 20000 },
+            "gist": { "type": "string", "maxLength": 3000 },
+            "outline": { "type": "string", "maxLength": 8000 },
+            "checks": { "type": "array", "items": { "enum": ["gist", "sequence", "detail", "relationship"] } },
+            "independence": { "anyOf": [{ "enum": ["not-yet", "with-outline", "independent"] }, { "type": "null" }] },
+            "completedAt": { "anyOf": [{ "type": "string", "maxLength": 40 }, { "type": "null" }] }
+          }
+        }
+      }
+    }
+  }
+}
